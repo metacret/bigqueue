@@ -1,5 +1,11 @@
 package com.leansoft.bigqueue;
 
+import com.leansoft.bigqueue.page.IMappedPage;
+import com.leansoft.bigqueue.page.IMappedPageFactory;
+import com.leansoft.bigqueue.page.MappedPageFactoryImpl;
+import com.leansoft.bigqueue.utils.Calculator;
+import com.leansoft.bigqueue.utils.FileUtil;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -9,12 +15,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import com.leansoft.bigqueue.page.IMappedPage;
-import com.leansoft.bigqueue.page.IMappedPageFactory;
-import com.leansoft.bigqueue.page.MappedPageFactoryImpl;
-import com.leansoft.bigqueue.utils.Calculator;
-import com.leansoft.bigqueue.utils.FileUtil;
 
 /**
  * A big array implementation supporting sequential append and random read.
@@ -201,16 +201,13 @@ public class BigArrayImpl implements IBigArray {
 			
 			ByteBuffer indexItemBuffer = this.getIndexItemBuffer(index);
 			long dataPageIndex = indexItemBuffer.getLong();
-			
-			long toRemoveIndexPageTimestamp = this.indexPageFactory.getPageFileLastModifiedTime(indexPageIndex);
-			long toRemoveDataPageItemstamp = this.dataPageFactory.getPageFileLastModifiedTime(dataPageIndex);
-			
-			if (toRemoveIndexPageTimestamp > 0L) { 
-				this.indexPageFactory.deletePagesBefore(toRemoveIndexPageTimestamp);
-			}
-			if (toRemoveDataPageItemstamp > 0L) {
-				this.dataPageFactory.deletePagesBefore(toRemoveDataPageItemstamp);
-			}
+
+            if (indexPageIndex > 0L) {
+                this.indexPageFactory.deletePagesBeforePageIndex(indexPageIndex);
+            }
+            if (dataPageIndex > 0L) {
+                this.dataPageFactory.deletePagesBeforePageIndex(dataPageIndex);
+            }
 			
 			// advance the tail to index
 			this.arrayTailIndex.set(index);
